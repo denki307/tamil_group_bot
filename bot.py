@@ -293,6 +293,35 @@ def auto_moderate(update, context):
         )
 
 
+def broadcast(update, context):
+    if not is_sudo(update.effective_user.id):
+        update.message.reply_text("❌ SUDO only command")
+        return
+
+    if not context.args:
+        update.message.reply_text("Usage:\n/broadcast <message>")
+        return
+
+    msg = " ".join(context.args)
+
+    chats = memory.distinct("chat_id")
+    sent = 0
+    failed = 0
+
+    for chat_id in chats:
+        try:
+            context.bot.send_message(chat_id, msg)
+            sent += 1
+        except:
+            failed += 1
+
+    update.message.reply_text(
+        f"📢 Broadcast finished!\n\n"
+        f"✅ Sent: {sent}\n"
+        f"❌ Failed: {failed}"
+    )
+
+
 # ---------- RESTART ----------
 def restart(update, context):
     if not is_sudo(update.effective_user.id):
@@ -319,6 +348,7 @@ def main():
     dp.add_handler(CommandHandler("gban", gban))
     dp.add_handler(CommandHandler("ungban", ungban))
     dp.add_handler(CommandHandler("gbannedusers", gbannedusers))
+    dp.add_handler(CommandHandler("broadcast", broadcast))
 
     dp.add_handler(CommandHandler("restart", restart))
 
