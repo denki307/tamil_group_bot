@@ -96,38 +96,49 @@ def help_pages(update, context):
     query.answer()
     data = query.data
 
+    back_keyboard = InlineKeyboardMarkup([
+        [InlineKeyboardButton("🔙 BACK", callback_data="help")]
+    ])
+
     if data == "broadcast":
         text = (
-            "📢 *Broadcast*\n\n"
-            "/broadcast <message>\n"
-            "_Send message to all chats_\n\n"
+            "📢 *BROADCAST*\n\n"
+            "/broadcast <message>\n\n"
+            "_Send message to all served chats_\n"
             "*SUDO only*"
         )
 
     elif data == "gban":
         text = (
-            "🤧 *Global Ban*\n\n"
-            "/gban (reply)\n"
-            "/ungban (reply)\n"
+            "🤧 *GLOBAL BAN*\n\n"
+            "/gban [reply]\n"
+            "/ungban [reply]\n"
             "/gbannedusers\n\n"
             "*SUDO only*"
         )
 
     elif data == "info":
-        text = "📝 *Info*\n\n/id – Get chat or user ID"
+        text = (
+            "📝 *INFO*\n\n"
+            "/id – Get chat or user ID"
+        )
 
     elif data == "sudo":
         text = (
-            "🥀 *Sudo Commands*\n\n"
-            "/addsudo (reply)\n"
-            "/delsudo (reply)\n"
+            "🥀 *SUDO & OWNER*\n\n"
+            "/addsudo [reply]\n"
+            "/delsudo [reply]\n"
             "/sudolist\n"
             "/restart"
         )
     else:
         return
 
-    query.edit_message_caption(caption=text, parse_mode=ParseMode.MARKDOWN)
+    query.edit_message_caption(
+        caption=text,
+        parse_mode=ParseMode.MARKDOWN,
+        reply_markup=back_keyboard
+    )
 
 
 # ---------- WARN / MUTE ----------
