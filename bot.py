@@ -65,7 +65,7 @@ def start(update, context):
     )
 
 # ---------- HELP MENU ----------
-def help_menu(update, context):"
+def help_menu(update, context):
     query = update.callback_query
     query.answer()
 
