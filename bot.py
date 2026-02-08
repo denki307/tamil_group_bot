@@ -37,7 +37,7 @@ def start(update, context):
     reply_markup = InlineKeyboardMarkup(keyboard)
 
     update.message.reply_photo(
-        photo="https://i.imgur.com/8KQZ5ZC.jpg",
+        photo="https://graph.org/file/5edba62fe35cba67f3ad9-7ae56f4f2bd098647d.jpg",
         caption=(
             "🤖 *Tamil Group Moderation Bot*\n\n"
             "• Auto moderation\n"
