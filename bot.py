@@ -82,17 +82,13 @@ def help_menu(update, context):
         [InlineKeyboardButton("📝 INFO", callback_data="info")],
         [InlineKeyboardButton("🥀 SUDO", callback_data="sudo")],
     ])
-        
-        back_keyboard = InlineKeyboardMarkup([
-        [InlineKeyboardButton("🔙 BACK", callback_data="help")]
-    ])
-
+          
     query.edit_message_caption(
         caption="📖 *Help Menu*\n\nChoose a category:",
         parse_mode=ParseMode.MARKDOWN,
         reply_markup=InlineKeyboardMarkup(keyboard),
     )
-
+    
 
 # ---------- HELP PAGES ----------
 def help_pages(update, context):
