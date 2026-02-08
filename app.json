@@ -1,29 +1,24 @@
 {
   "name": "Tamil Group Moderation Bot",
-  "description": "Telegram Tamil Group",
-  "repository": "https://github.com/denki307/tamil_group_bot",
-  "keywords": [
-    "telegram",
-    "tamil",
-    "group",
-    "moderation",
-    "bot",
-    "mongodb",
-    "gban",
-    "sudo"
-  ],
+  "description": "Telegram bot with moderation, AI reply, mute, broadcast",
+  "repository": "https://github.com/YOUR_GITHUB_USERNAME/YOUR_REPO",
+  "keywords": ["telegram", "bot", "tamil", "moderation", "ai"],
   "env": {
     "BOT_TOKEN": {
-      "description": "Telegram Bot Token (from @BotFather)",
+      "description": "Telegram Bot Token",
       "required": true
     },
     "MONGO_URL": {
-      "description": "MongoDB connection string (mongodb+srv://...)",
+      "description": "MongoDB connection URL",
       "required": true
     },
     "OWNER_ID": {
       "description": "Telegram Owner User ID",
       "required": true
+    },
+    "OPENAI_KEY": {
+      "description": "OpenAI API Key for AI auto reply",
+      "required": false
     }
   },
   "formation": {
