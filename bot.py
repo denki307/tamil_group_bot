@@ -1,12 +1,18 @@
 import os
 import sys
 from datetime import datetime, timedelta
-from telegram.ext import Updater, CommandHandler, MessageHandler, Filters, CallbackQueryHandler
+from telegram.ext import (
+    Updater,
+    CommandHandler,
+    MessageHandler,
+    Filters,
+    CallbackQueryHandler,
+)
 from telegram import (
     ChatPermissions,
     InlineKeyboardButton,
     InlineKeyboardMarkup,
-    ParseMode
+    ParseMode,
 )
 from pymongo import MongoClient
 from replies import get_reply, BAD_WORDS
@@ -14,7 +20,7 @@ from replies import get_reply, BAD_WORDS
 # ===== ENV =====
 TOKEN = os.getenv("BOT_TOKEN")
 MONGO_URL = os.getenv("MONGO_URL")
-OWNER_ID = int(os.getenv("OWNER_ID", "8516457288"))  # 🔁 change
+OWNER_ID = int(os.getenv("OWNER_ID", "8516457288"))
 
 # ===== DB =====
 mongo = MongoClient(MONGO_URL)
@@ -33,14 +39,14 @@ LAST_MESSAGES = {}
 def is_admin(update, context):
     member = context.bot.get_chat_member(
         update.effective_chat.id,
-        update.effective_user.id
+        update.effective_user.id,
     )
-    return member.status in ["administrator", "creator"]
+    return member.status in ("administrator", "creator")
+
+
 def is_sudo(user_id):
-    return (
-        user_id == OWNER_ID
-        or sudo_db.find_one({"user_id": user_id}) is not None
-    )
+    return user_id == OWNER_ID or sudo_db.find_one({"user_id": user_id})
+
 
 # ---------- START ----------
 def start(update, context):
@@ -49,20 +55,21 @@ def start(update, context):
         [InlineKeyboardButton("📢 SUPPORT CHANNEL", url="https://t.me/MUSIC_BOT_TEAM")],
         [
             InlineKeyboardButton("📖 HELP", callback_data="help"),
-            InlineKeyboardButton("👑 OWNER", url="https://t.me/DENKI1234")
-        ]
+            InlineKeyboardButton("👑 OWNER", url="https://t.me/DENKI1234"),
+        ],
     ]
 
     update.message.reply_photo(
         photo="https://graph.org/file/5edba62fe35cba67f3ad9-7ae56f4f2bd098647d.jpg",
         caption=(
-            "🤖 ᴀ ғᴀsᴛ & ᴘᴏᴡᴇʀғᴜʟ ᴛᴇʟᴇɢʀᴀᴍ ᴄʜᴀᴛ ʙᴏᴛ ᴡɪᴛʜ sᴏᴍᴇ ᴀᴡᴇsᴏᴍᴇ ғᴇᴀᴛᴜʀᴇs.\n\n"
+            "ᴀ ғᴀsᴛ & ᴘᴏᴡᴇʀғᴜʟ ᴛᴇʟᴇɢʀᴀᴍ ᴄʜᴀᴛ ʙᴏᴛ ᴡɪᴛʜ sᴏᴍᴇ ᴀᴡᴇsᴏᴍᴇ ғᴇᴀᴛᴜʀᴇs.\n\n"
             "──────────────────\n"
             "๏ ᴄʟɪᴄᴋ ᴏɴ ᴛʜᴇ ʜᴇʟᴩ ʙᴜᴛᴛᴏɴ ᴛᴏ ɢᴇᴛ ɪɴғᴏʀᴍᴀᴛɪᴏɴ ᴀʙᴏᴜᴛ ᴍʏ ᴍᴏᴅᴜʟᴇs ᴀɴᴅ ᴄᴏᴍᴍᴀɴᴅs.\n"
         ),
         parse_mode=ParseMode.MARKDOWN,
-        reply_markup=InlineKeyboardMarkup(keyboard)
+        reply_markup=InlineKeyboardMarkup(keyboard),
     )
+
 
 # ---------- HELP MENU ----------
 def help_menu(update, context):
@@ -73,68 +80,63 @@ def help_menu(update, context):
         [InlineKeyboardButton("📢 BROADCAST", callback_data="broadcast")],
         [InlineKeyboardButton("🤧 GBAN", callback_data="gban")],
         [InlineKeyboardButton("📝 INFO", callback_data="info")],
-        [InlineKeyboardButton("🥀 SUDO", callback_data="sudo")]
+        [InlineKeyboardButton("🥀 SUDO", callback_data="sudo")],
     ]
 
     query.edit_message_caption(
         caption="📖 *Help Menu*\n\nChoose a category:",
         parse_mode=ParseMode.MARKDOWN,
-        reply_markup=InlineKeyboardMarkup(keyboard)
+        reply_markup=InlineKeyboardMarkup(keyboard),
     )
+
 
 # ---------- HELP PAGES ----------
 def help_pages(update, context):
     query = update.callback_query
     query.answer()
-
     data = query.data
 
     if data == "broadcast":
         text = (
-            "📢 *BROADCAST*\n\n"
+            "📢 *Broadcast*\n\n"
             "/broadcast <message>\n"
-            "_Send message to all served chats_\n\n"
+            "_Send message to all chats_\n\n"
             "*SUDO only*"
         )
 
     elif data == "gban":
         text = (
-            "🤧 *GLOBAL BAN*\n\n"
-            "/gban [reply/user_id]\n"
-            "/ungban [reply/user_id]\n"
+            "🤧 *Global Ban*\n\n"
+            "/gban (reply)\n"
+            "/ungban (reply)\n"
             "/gbannedusers\n\n"
-            "_Globally ban user from all chats_\n"
             "*SUDO only*"
         )
 
     elif data == "info":
-        text = (
-            "📝 *INFO*\n\n"
-            "/id – Get chat or user ID"
-        )
+        text = "📝 *Info*\n\n/id – Get chat or user ID"
 
     elif data == "sudo":
         text = (
-            "🥀 *SUDO & OWNER*\n\n"
-            "/addsudo [reply/user_id]\n"
-            "/delsudo [reply/user_id]\n"
-            "/sudolist\n\n"
-            "/restart – Restart bot"
+            "🥀 *Sudo Commands*\n\n"
+            "/addsudo (reply)\n"
+            "/delsudo (reply)\n"
+            "/sudolist\n"
+            "/restart"
         )
     else:
         return
 
-    query.edit_message_caption(
-        caption=text,
-        parse_mode=ParseMode.MARKDOWN
-    )
+    query.edit_message_caption(caption=text, parse_mode=ParseMode.MARKDOWN)
 
-# ---------- MODERATION ----------
+
+# ---------- WARN / MUTE ----------
 def warn(update, context):
     if not is_admin(update, context):
         return
 
     if not update.message.reply_to_message:
+        update.message.reply_text("Reply to a user.")
         return
 
     user = update.message.reply_to_message.from_user
@@ -146,86 +148,110 @@ def warn(update, context):
         context.bot.restrict_chat_member(
             update.effective_chat.id,
             uid,
-            permissions=ChatPermissions(can_send_messages=False),
-            until_date=datetime.now() + timedelta(minutes=10)
+            ChatPermissions(can_send_messages=False),
+            until_date=datetime.now() + timedelta(minutes=10),
         )
         WARN_DATA[uid] = 0
         update.message.reply_text(f"🔇 {user.first_name} muted (3 warns)")
     else:
-        update.message.reply_text(
-            f"⚠️ Warn {WARN_DATA[uid]}/{WARN_LIMIT}"
-        )
+        update.message.reply_text(f"⚠️ Warn {WARN_DATA[uid]}/{WARN_LIMIT}")
+
 
 def unmute(update, context):
     if not is_admin(update, context):
+        return
+
+    if not update.message.reply_to_message:
         return
 
     uid = update.message.reply_to_message.from_user.id
     context.bot.restrict_chat_member(
         update.effective_chat.id,
         uid,
-        permissions=ChatPermissions(can_send_messages=True)
+        ChatPermissions(can_send_messages=True),
     )
     update.message.reply_text("🔊 User unmuted")
+
 
 # ---------- INFO ----------
 def get_id(update, context):
     if update.message.reply_to_message:
         update.message.reply_text(
             f"👤 User ID: `{update.message.reply_to_message.from_user.id}`",
-            parse_mode="Markdown"
+            parse_mode=ParseMode.MARKDOWN,
         )
     else:
         update.message.reply_text(
             f"💬 Chat ID: `{update.effective_chat.id}`",
-            parse_mode="Markdown"
+            parse_mode=ParseMode.MARKDOWN,
         )
+
 
 # ---------- SUDO ----------
 def addsudo(update, context):
     if update.effective_user.id != OWNER_ID:
         return
+
+    if not update.message.reply_to_message:
+        return
+
     uid = update.message.reply_to_message.from_user.id
     sudo_db.update_one({"user_id": uid}, {"$set": {"user_id": uid}}, upsert=True)
     update.message.reply_text("✅ Sudo added")
 
+
 def delsudo(update, context):
     if update.effective_user.id != OWNER_ID:
         return
+
+    if not update.message.reply_to_message:
+        return
+
     uid = update.message.reply_to_message.from_user.id
     sudo_db.delete_one({"user_id": uid})
     update.message.reply_text("❌ Sudo removed")
+
 
 def sudolist(update, context):
     sudos = sudo_db.find()
     text = "🥀 *Sudo Users*\n\n"
     for s in sudos:
         text += f"`{s['user_id']}`\n"
-    update.message.reply_text(text or "No sudos", parse_mode="Markdown")
+    update.message.reply_text(text or "No sudos", parse_mode=ParseMode.MARKDOWN)
+
 
 # ---------- GBAN ----------
 def gban(update, context):
     if not is_sudo(update.effective_user.id):
         return
 
+    if not update.message.reply_to_message:
+        return
+
     uid = update.message.reply_to_message.from_user.id
     gban_db.update_one({"user_id": uid}, {"$set": {"user_id": uid}}, upsert=True)
     update.message.reply_text("🚫 User globally banned")
 
+
 def ungban(update, context):
     if not is_sudo(update.effective_user.id):
+        return
+
+    if not update.message.reply_to_message:
         return
 
     uid = update.message.reply_to_message.from_user.id
     gban_db.delete_one({"user_id": uid})
     update.message.reply_text("✅ User globally unbanned")
 
+
 def gbannedusers(update, context):
     bans = gban_db.find()
     text = "🚫 *Globally Banned Users*\n\n"
     for b in bans:
         text += f"`{b['user_id']}`\n"
-    update.message.reply_text(text or "No bans", parse_mode="Markdown")
+    update.message.reply_text(text or "No bans", parse_mode=ParseMode.MARKDOWN)
+
 
 # ---------- AUTO MODERATION ----------
 def auto_moderate(update, context):
@@ -251,18 +277,19 @@ def auto_moderate(update, context):
     if data:
         update.message.reply_text(data["reply"])
     else:
-        memory.insert_one({
-            "text": text,
-            "reply": get_reply(),
-            "count": 1
-        })
+        memory.insert_one(
+            {"text": text, "reply": get_reply(), "count": 1}
+        )
+
 
 # ---------- RESTART ----------
 def restart(update, context):
     if not is_sudo(update.effective_user.id):
         return
+
     update.message.reply_text("♻️ Restarting bot...")
     os.execl(sys.executable, sys.executable, *sys.argv)
+
 
 # ---------- MAIN ----------
 def main():
@@ -292,5 +319,7 @@ def main():
     updater.start_polling()
     updater.idle()
 
+
 if __name__ == "__main__":
     main()
+
