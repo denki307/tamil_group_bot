@@ -76,16 +76,16 @@ def help_menu(update, context):
     query = update.callback_query
     query.answer()
 
-    back_keyboard = InlineKeyboardMarkup([
-        [InlineKeyboardButton("🔙 BACK", callback_data="help")]
-    ])
-    
     keyboard = [
         [InlineKeyboardButton("📢 BROADCAST", callback_data="broadcast")],
         [InlineKeyboardButton("🤧 GBAN", callback_data="gban")],
         [InlineKeyboardButton("📝 INFO", callback_data="info")],
         [InlineKeyboardButton("🥀 SUDO", callback_data="sudo")],
-    ]
+    ])
+        
+        back_keyboard = InlineKeyboardMarkup([
+        [InlineKeyboardButton("🔙 BACK", callback_data="help")]
+    ])
 
     query.edit_message_caption(
         caption="📖 *Help Menu*\n\nChoose a category:",
