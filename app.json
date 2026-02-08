@@ -1,9 +1,23 @@
 {
-  "name": "Tamil Group Bot",
+  "name": "Tamil Group Telegram Bot",
+  "description": "Tamil Auto Reply + Group Moderation Bot with MongoDB",
+  "repository": "https://github.com/denki307/tamil_group_bot",
+  "keywords": ["telegram", "tamil", "bot", "mongodb"],
   "env": {
     "BOT_TOKEN": {
-      "description": "Telegram Bot Token",
+      "description": "Telegram Bot Token from @BotFather",
+      "required": true
+    },
+    "MONGO_URL": {
+      "description": "MongoDB connection string (MongoDB Atlas)",
       "required": true
     }
-  }
+  },
+  "formation": {
+    "worker": {
+      "quantity": 1
+    }
+  },
+  "stack": "heroku-22"
 }
+
