@@ -2,4 +2,5 @@
 
 Deploy to Heroku using Deploy Button.
 
-[![Deploy](https://www.herokucdn.com/denki307/tamil_group_bot)](https://heroku.com/deploy)
+[![Deploy](https://www.herokucdn.com/deploy/button.svg)](https://heroku.com/deploy)
+
