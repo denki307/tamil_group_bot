@@ -1,19 +1,30 @@
 import os
+import sys
 from datetime import datetime, timedelta
-from telegram.ext import Updater, CommandHandler, MessageHandler, Filters
-from telegram import ChatPermissions, InlineKeyboardButton, InlineKeyboardMarkup
+from telegram.ext import Updater, CommandHandler, MessageHandler, Filters, CallbackQueryHandler
+from telegram import (
+    ChatPermissions,
+    InlineKeyboardButton,
+    InlineKeyboardMarkup,
+    ParseMode
+)
 from pymongo import MongoClient
 from replies import get_reply, BAD_WORDS
 
 # ===== ENV =====
 TOKEN = os.getenv("BOT_TOKEN")
 MONGO_URL = os.getenv("MONGO_URL")
+OWNER_ID = int(os.getenv("OWNER_ID", "123456789"))  # 🔁 change
 
 # ===== DB =====
 mongo = MongoClient(MONGO_URL)
 db = mongo["tamilbot"]
-memory = db["chat_memory"]
 
+memory = db["chat_memory"]
+sudo_db = db["sudo_users"]
+gban_db = db["global_bans"]
+
+# ===== CONST =====
 WARN_LIMIT = 3
 WARN_DATA = {}
 LAST_MESSAGES = {}
@@ -26,15 +37,22 @@ def is_admin(update, context):
     )
     return member.status in ["administrator", "creator"]
 
-# ---------- COMMANDS ----------
+def is_sudo(user_id):
+    return (
+        user_id == OWNER_ID
+        or sudo_db.find_one({"user_id": user_id}) is not None
+    )
+
+# ---------- START ----------
 def start(update, context):
     keyboard = [
         [InlineKeyboardButton("💬 SUPPORT GROUP", url="https://t.me/MUSIC_BOT_WORLD")],
         [InlineKeyboardButton("📢 SUPPORT CHANNEL", url="https://t.me/MUSIC_BOT_TEAM")],
-        [InlineKeyboardButton("👑 OWNER", url="https://t.me/DENKI1234")]
+        [
+            InlineKeyboardButton("📖 HELP", callback_data="help"),
+            InlineKeyboardButton("👑 OWNER", url="https://t.me/DENKI1234")
+        ]
     ]
-
-    reply_markup = InlineKeyboardMarkup(keyboard)
 
     update.message.reply_photo(
         photo="https://graph.org/file/5edba62fe35cba67f3ad9-7ae56f4f2bd098647d.jpg",
@@ -45,108 +63,209 @@ def start(update, context):
             "• Learning auto reply\n\n"
             "_Use in groups & make me admin_ 😎"
         ),
-        parse_mode="Markdown",
-        reply_markup=reply_markup
+        parse_mode=ParseMode.MARKDOWN,
+        reply_markup=InlineKeyboardMarkup(keyboard)
     )
 
+# ---------- HELP MENU ----------
+def help_menu(update, context):
+    query = update.callback_query
+    query.answer()
 
+    keyboard = [
+        [InlineKeyboardButton("📢 BROADCAST", callback_data="broadcast")],
+        [InlineKeyboardButton("🤧 GBAN", callback_data="gban")],
+        [InlineKeyboardButton("📝 INFO", callback_data="info")],
+        [InlineKeyboardButton("🥀 SUDO", callback_data="sudo")]
+    ]
+
+    query.edit_message_caption(
+        caption="📖 *Help Menu*\n\nChoose a category:",
+        parse_mode=ParseMode.MARKDOWN,
+        reply_markup=InlineKeyboardMarkup(keyboard)
+    )
+
+# ---------- HELP PAGES ----------
+def help_pages(update, context):
+    query = update.callback_query
+    query.answer()
+
+    data = query.data
+
+    if data == "broadcast":
+        text = (
+            "📢 *BROADCAST*\n\n"
+            "/broadcast <message>\n"
+            "_Send message to all served chats_\n\n"
+            "*SUDO only*"
+        )
+
+    elif data == "gban":
+        text = (
+            "🤧 *GLOBAL BAN*\n\n"
+            "/gban [reply/user_id]\n"
+            "/ungban [reply/user_id]\n"
+            "/gbannedusers\n\n"
+            "_Globally ban user from all chats_\n"
+            "*SUDO only*"
+        )
+
+    elif data == "info":
+        text = (
+            "📝 *INFO*\n\n"
+            "/id – Get chat or user ID"
+        )
+
+    elif data == "sudo":
+        text = (
+            "🥀 *SUDO & OWNER*\n\n"
+            "/addsudo [reply/user_id]\n"
+            "/delsudo [reply/user_id]\n"
+            "/sudolist\n\n"
+            "/restart – Restart bot"
+        )
+    else:
+        return
+
+    query.edit_message_caption(
+        caption=text,
+        parse_mode=ParseMode.MARKDOWN
+    )
+
+# ---------- MODERATION ----------
 def warn(update, context):
     if not is_admin(update, context):
-        update.message.reply_text("❌ Admin only command")
         return
 
     if not update.message.reply_to_message:
-        update.message.reply_text("⚠️ User message-ku reply pannunga")
         return
 
     user = update.message.reply_to_message.from_user
     uid = user.id
 
     WARN_DATA[uid] = WARN_DATA.get(uid, 0) + 1
-    warns = WARN_DATA[uid]
 
-    if warns >= WARN_LIMIT:
-        until = datetime.now() + timedelta(minutes=10)
+    if WARN_DATA[uid] >= WARN_LIMIT:
         context.bot.restrict_chat_member(
             update.effective_chat.id,
             uid,
             permissions=ChatPermissions(can_send_messages=False),
-            until_date=until
+            until_date=datetime.now() + timedelta(minutes=10)
         )
         WARN_DATA[uid] = 0
-        update.message.reply_text(
-            f"🔇 {user.first_name} muted (3 warns)"
-        )
+        update.message.reply_text(f"🔇 {user.first_name} muted (3 warns)")
     else:
         update.message.reply_text(
-            f"⚠️ Warn {warns}/{WARN_LIMIT} for {user.first_name}"
+            f"⚠️ Warn {WARN_DATA[uid]}/{WARN_LIMIT}"
         )
 
 def unmute(update, context):
     if not is_admin(update, context):
-        update.message.reply_text("❌ Admin only command")
-        return
-
-    if not update.message.reply_to_message:
-        update.message.reply_text("⚠️ Reply to muted user")
         return
 
     uid = update.message.reply_to_message.from_user.id
     context.bot.restrict_chat_member(
         update.effective_chat.id,
         uid,
-        permissions=ChatPermissions(
-            can_send_messages=True,
-            can_send_media_messages=True,
-            can_send_polls=True,
-            can_send_other_messages=True,
-            can_add_web_page_previews=True
-        )
+        permissions=ChatPermissions(can_send_messages=True)
     )
     update.message.reply_text("🔊 User unmuted")
 
-def kick(update, context):
-    if not is_admin(update, context):
-        update.message.reply_text("❌ Admin only command")
-        return
+# ---------- INFO ----------
+def get_id(update, context):
+    if update.message.reply_to_message:
+        update.message.reply_text(
+            f"👤 User ID: `{update.message.reply_to_message.from_user.id}`",
+            parse_mode="Markdown"
+        )
+    else:
+        update.message.reply_text(
+            f"💬 Chat ID: `{update.effective_chat.id}`",
+            parse_mode="Markdown"
+        )
 
-    if not update.message.reply_to_message:
-        update.message.reply_text("⚠️ Reply to user")
+# ---------- SUDO ----------
+def addsudo(update, context):
+    if update.effective_user.id != OWNER_ID:
+        return
+    uid = update.message.reply_to_message.from_user.id
+    sudo_db.update_one({"user_id": uid}, {"$set": {"user_id": uid}}, upsert=True)
+    update.message.reply_text("✅ Sudo added")
+
+def delsudo(update, context):
+    if update.effective_user.id != OWNER_ID:
+        return
+    uid = update.message.reply_to_message.from_user.id
+    sudo_db.delete_one({"user_id": uid})
+    update.message.reply_text("❌ Sudo removed")
+
+def sudolist(update, context):
+    sudos = sudo_db.find()
+    text = "🥀 *Sudo Users*\n\n"
+    for s in sudos:
+        text += f"`{s['user_id']}`\n"
+    update.message.reply_text(text or "No sudos", parse_mode="Markdown")
+
+# ---------- GBAN ----------
+def gban(update, context):
+    if not is_sudo(update.effective_user.id):
         return
 
     uid = update.message.reply_to_message.from_user.id
-    context.bot.kick_chat_member(update.effective_chat.id, uid)
-    update.message.reply_text("👢 User kicked")
+    gban_db.update_one({"user_id": uid}, {"$set": {"user_id": uid}}, upsert=True)
+    update.message.reply_text("🚫 User globally banned")
 
-# ---------- AUTO MODERATION + LEARNING ----------
+def ungban(update, context):
+    if not is_sudo(update.effective_user.id):
+        return
+
+    uid = update.message.reply_to_message.from_user.id
+    gban_db.delete_one({"user_id": uid})
+    update.message.reply_text("✅ User globally unbanned")
+
+def gbannedusers(update, context):
+    bans = gban_db.find()
+    text = "🚫 *Globally Banned Users*\n\n"
+    for b in bans:
+        text += f"`{b['user_id']}`\n"
+    update.message.reply_text(text or "No bans", parse_mode="Markdown")
+
+# ---------- AUTO MODERATION ----------
 def auto_moderate(update, context):
-    msg = update.message
-    uid = msg.from_user.id
-    text = msg.text.lower()
+    uid = update.message.from_user.id
+    text = update.message.text.lower()
 
-    # Bad word filter
+    if gban_db.find_one({"user_id": uid}):
+        update.message.delete()
+        return
+
     for w in BAD_WORDS:
         if w in text:
-            msg.delete()
+            update.message.delete()
             return
 
-    # Spam detection (same message)
-    if uid in LAST_MESSAGES and LAST_MESSAGES[uid] == text:
-        msg.delete()
+    if LAST_MESSAGES.get(uid) == text:
+        update.message.delete()
         return
 
     LAST_MESSAGES[uid] = text
 
-    # ===== LEARNING CHAT =====
     data = memory.find_one({"text": text})
     if data:
-        msg.reply_text(data["reply"])
+        update.message.reply_text(data["reply"])
     else:
         memory.insert_one({
             "text": text,
             "reply": get_reply(),
             "count": 1
         })
+
+# ---------- RESTART ----------
+def restart(update, context):
+    if not is_sudo(update.effective_user.id):
+        return
+    update.message.reply_text("♻️ Restarting bot...")
+    os.execl(sys.executable, sys.executable, *sys.argv)
 
 # ---------- MAIN ----------
 def main():
@@ -156,7 +275,21 @@ def main():
     dp.add_handler(CommandHandler("start", start))
     dp.add_handler(CommandHandler("warn", warn))
     dp.add_handler(CommandHandler("unmute", unmute))
-    dp.add_handler(CommandHandler("kick", kick))
+    dp.add_handler(CommandHandler("id", get_id))
+
+    dp.add_handler(CommandHandler("addsudo", addsudo))
+    dp.add_handler(CommandHandler("delsudo", delsudo))
+    dp.add_handler(CommandHandler("sudolist", sudolist))
+
+    dp.add_handler(CommandHandler("gban", gban))
+    dp.add_handler(CommandHandler("ungban", ungban))
+    dp.add_handler(CommandHandler("gbannedusers", gbannedusers))
+
+    dp.add_handler(CommandHandler("restart", restart))
+
+    dp.add_handler(CallbackQueryHandler(help_menu, pattern="help"))
+    dp.add_handler(CallbackQueryHandler(help_pages))
+
     dp.add_handler(MessageHandler(Filters.text & ~Filters.command, auto_moderate))
 
     updater.start_polling()
