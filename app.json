@@ -1,0 +1,9 @@
+{
+  "name": "Tamil Group Bot",
+  "env": {
+    "BOT_TOKEN": {
+      "description": "Telegram Bot Token",
+      "required": true
+    }
+  }
+}
