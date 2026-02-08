@@ -1,9 +1,4 @@
 import os
-import openai
-
-OPENAI_API_KEY = os.getenv("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")
-openai.api_key = OPENAI_API_KEY
-
 import sys
 from datetime import datetime, timedelta
 from telegram.ext import (
@@ -21,11 +16,14 @@ from telegram import (
 )
 from pymongo import MongoClient
 from replies import get_reply, BAD_WORDS
+import openai
 
 # ===== ENV =====
 TOKEN = os.getenv("BOT_TOKEN")
 MONGO_URL = os.getenv("MONGO_URL")
 OWNER_ID = int(os.getenv("OWNER_ID", "8516457288"))
+OPENAI_KEY = os.getenv("OPENAI_KEY")
+openai.api_key = OPENAI_KEY
 
 # ===== DB =====
 mongo = MongoClient(MONGO_URL)
@@ -48,10 +46,8 @@ def is_admin(update, context):
     )
     return member.status in ("administrator", "creator")
 
-
 def is_sudo(user_id):
     return user_id == OWNER_ID or sudo_db.find_one({"user_id": user_id})
-
 
 # ---------- START ----------
 def start(update, context):
@@ -67,14 +63,15 @@ def start(update, context):
     update.message.reply_photo(
         photo="https://graph.org/file/5edba62fe35cba67f3ad9-7ae56f4f2bd098647d.jpg",
         caption=(
-            "ᴀ ғᴀsᴛ & ᴘᴏᴡᴇʀғᴜʟ ᴛᴇʟᴇɢʀᴀᴍ ᴄʜᴀᴛ ʙᴏᴛ ᴡɪᴛʜ sᴏᴍᴇ ᴀᴡᴇsᴏᴍᴇ ғᴇᴀᴛᴜʀᴇs.\n\n"
-            "──────────────────\n"
-            "๏ ᴄʟɪᴄᴋ ᴏɴ ᴛʜᴇ ʜᴇʟᴩ ʙᴜᴛᴛᴏɴ ᴛᴏ ɢᴇᴛ ɪɴғᴏʀᴍᴀᴛɪᴏɴ ᴀʙᴏᴜᴛ ᴍʏ ᴍᴏᴅᴜʟᴇs ᴀɴᴅ ᴄᴏᴍᴍᴀɴᴅs.\n"
+            "🤖 Tamil Group Moderation Bot\n\n"
+            "• Auto moderation\n"
+            "• Warn / Mute system\n"
+            "• Learning auto reply\n\n"
+            "_Use in groups & make me admin_ 😎"
         ),
         parse_mode=ParseMode.MARKDOWN,
         reply_markup=InlineKeyboardMarkup(keyboard),
     )
-
 
 # ---------- HELP MENU ----------
 def help_menu(update, context):
@@ -87,13 +84,12 @@ def help_menu(update, context):
         [InlineKeyboardButton("📝 INFO", callback_data="info")],
         [InlineKeyboardButton("🥀 SUDO", callback_data="sudo")],
     ]
-          
+
     query.edit_message_caption(
         caption="📖 *Help Menu*\n\nChoose a category:",
         parse_mode=ParseMode.MARKDOWN,
         reply_markup=InlineKeyboardMarkup(keyboard),
     )
-    
 
 # ---------- HELP PAGES ----------
 def help_pages(update, context):
@@ -112,29 +108,23 @@ def help_pages(update, context):
             "_Send message to all served chats_\n"
             "*SUDO only*"
         )
-
     elif data == "gban":
         text = (
             "🤧 *GLOBAL BAN*\n\n"
-            "/gban [reply]\n"
-            "/ungban [reply]\n"
+            "/gban [reply/user_id]\n"
+            "/ungban [reply/user_id]\n"
             "/gbannedusers\n\n"
             "*SUDO only*"
         )
-
     elif data == "info":
-        text = (
-            "📝 *INFO*\n\n"
-            "/id – Get chat or user ID"
-        )
-
+        text = "📝 *INFO*\n\n/id – Get chat or user ID"
     elif data == "sudo":
         text = (
             "🥀 *SUDO & OWNER*\n\n"
-            "/addsudo [reply]\n"
-            "/delsudo [reply]\n"
+            "/addsudo [reply/user_id]\n"
+            "/delsudo [reply/user_id]\n"
             "/sudolist\n"
-            "/restart"
+            "/restart – Restart bot"
         )
     else:
         return
@@ -144,7 +134,6 @@ def help_pages(update, context):
         parse_mode=ParseMode.MARKDOWN,
         reply_markup=back_keyboard
     )
-
 
 # ---------- WARN / MUTE ----------
 def warn(update, context):
@@ -172,7 +161,6 @@ def warn(update, context):
     else:
         update.message.reply_text(f"⚠️ Warn {WARN_DATA[uid]}/{WARN_LIMIT}")
 
-
 def unmute(update, context):
     if not is_admin(update, context):
         return
@@ -188,7 +176,6 @@ def unmute(update, context):
     )
     update.message.reply_text("🔊 User unmuted")
 
-
 # ---------- INFO ----------
 def get_id(update, context):
     if update.message.reply_to_message:
@@ -202,31 +189,24 @@ def get_id(update, context):
             parse_mode=ParseMode.MARKDOWN,
         )
 
-
 # ---------- SUDO ----------
 def addsudo(update, context):
     if update.effective_user.id != OWNER_ID:
         return
-
     if not update.message.reply_to_message:
         return
-
     uid = update.message.reply_to_message.from_user.id
     sudo_db.update_one({"user_id": uid}, {"$set": {"user_id": uid}}, upsert=True)
     update.message.reply_text("✅ Sudo added")
 
-
 def delsudo(update, context):
     if update.effective_user.id != OWNER_ID:
         return
-
     if not update.message.reply_to_message:
         return
-
     uid = update.message.reply_to_message.from_user.id
     sudo_db.delete_one({"user_id": uid})
     update.message.reply_text("❌ Sudo removed")
-
 
 def sudolist(update, context):
     sudos = sudo_db.find()
@@ -235,31 +215,24 @@ def sudolist(update, context):
         text += f"`{s['user_id']}`\n"
     update.message.reply_text(text or "No sudos", parse_mode=ParseMode.MARKDOWN)
 
-
 # ---------- GBAN ----------
 def gban(update, context):
     if not is_sudo(update.effective_user.id):
         return
-
     if not update.message.reply_to_message:
         return
-
     uid = update.message.reply_to_message.from_user.id
     gban_db.update_one({"user_id": uid}, {"$set": {"user_id": uid}}, upsert=True)
     update.message.reply_text("🚫 User globally banned")
 
-
 def ungban(update, context):
     if not is_sudo(update.effective_user.id):
         return
-
     if not update.message.reply_to_message:
         return
-
     uid = update.message.reply_to_message.from_user.id
     gban_db.delete_one({"user_id": uid})
     update.message.reply_text("✅ User globally unbanned")
-
 
 def gbannedusers(update, context):
     bans = gban_db.find()
@@ -268,8 +241,7 @@ def gbannedusers(update, context):
         text += f"`{b['user_id']}`\n"
     update.message.reply_text(text or "No bans", parse_mode=ParseMode.MARKDOWN)
 
-
-# ---------- AUTO MODERATION ----------
+# ---------- AUTO MODERATION + AI ----------
 def auto_moderate(update, context):
     uid = update.message.from_user.id
     text = update.message.text.lower()
@@ -293,48 +265,53 @@ def auto_moderate(update, context):
     if data:
         update.message.reply_text(data["reply"])
     else:
-        memory.insert_one(
-            {"text": text, "reply": get_reply(), "count": 1}
-        )
+        try:
+            if OPENAI_KEY:
+                response = openai.Completion.create(
+                    model="text-davinci-003",
+                    prompt=text,
+                    temperature=0.7,
+                    max_tokens=150
+                )
+                reply_text = response.choices[0].text.strip()
+            else:
+                reply_text = get_reply()
+        except:
+            reply_text = get_reply()
 
+        update.message.reply_text(reply_text)
+        memory.insert_one({
+            "text": text,
+            "reply": reply_text,
+            "count": 1
+        })
 
+# ---------- BROADCAST ----------
 def broadcast(update, context):
     if not is_sudo(update.effective_user.id):
         update.message.reply_text("❌ SUDO only command")
         return
-
     if not context.args:
         update.message.reply_text("Usage:\n/broadcast <message>")
         return
-
     msg = " ".join(context.args)
-
     chats = memory.distinct("chat_id")
     sent = 0
     failed = 0
-
     for chat_id in chats:
         try:
             context.bot.send_message(chat_id, msg)
             sent += 1
         except:
             failed += 1
-
-    update.message.reply_text(
-        f"📢 Broadcast finished!\n\n"
-        f"✅ Sent: {sent}\n"
-        f"❌ Failed: {failed}"
-    )
-
+    update.message.reply_text(f"📢 Broadcast finished!\n✅ Sent: {sent}\n❌ Failed: {failed}")
 
 # ---------- RESTART ----------
 def restart(update, context):
     if not is_sudo(update.effective_user.id):
         return
-
     update.message.reply_text("♻️ Restarting bot...")
     os.execl(sys.executable, sys.executable, *sys.argv)
-
 
 # ---------- MAIN ----------
 def main():
@@ -345,16 +322,13 @@ def main():
     dp.add_handler(CommandHandler("warn", warn))
     dp.add_handler(CommandHandler("unmute", unmute))
     dp.add_handler(CommandHandler("id", get_id))
-
     dp.add_handler(CommandHandler("addsudo", addsudo))
     dp.add_handler(CommandHandler("delsudo", delsudo))
     dp.add_handler(CommandHandler("sudolist", sudolist))
-
     dp.add_handler(CommandHandler("gban", gban))
     dp.add_handler(CommandHandler("ungban", ungban))
     dp.add_handler(CommandHandler("gbannedusers", gbannedusers))
     dp.add_handler(CommandHandler("broadcast", broadcast))
-
     dp.add_handler(CommandHandler("restart", restart))
 
     dp.add_handler(CallbackQueryHandler(help_menu, pattern="help"))
@@ -364,7 +338,6 @@ def main():
 
     updater.start_polling()
     updater.idle()
-
 
 if __name__ == "__main__":
     main()
