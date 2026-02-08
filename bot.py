@@ -76,6 +76,10 @@ def help_menu(update, context):
     query = update.callback_query
     query.answer()
 
+    back_keyboard = InlineKeyboardMarkup([
+        [InlineKeyboardButton("🔙 BACK", callback_data="help")]
+    ])
+    
     keyboard = [
         [InlineKeyboardButton("📢 BROADCAST", callback_data="broadcast")],
         [InlineKeyboardButton("🤧 GBAN", callback_data="gban")],
