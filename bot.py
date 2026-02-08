@@ -246,45 +246,28 @@ def auto_moderate(update, context):
     uid = update.message.from_user.id
     text = update.message.text.lower()
 
+    # Delete if globally banned
     if gban_db.find_one({"user_id": uid}):
         update.message.delete()
         return
 
+    # Delete if contains bad words
     for w in BAD_WORDS:
         if w in text:
             update.message.delete()
             return
 
+    # Delete if repeated message
     if LAST_MESSAGES.get(uid) == text:
         update.message.delete()
         return
 
     LAST_MESSAGES[uid] = text
 
-    data = memory.find_one({"text": text})
-    if data:
-        update.message.reply_text(data["reply"])
-    else:
-        try:
-            if OPENAI_KEY:
-                response = openai.Completion.create(
-                    model="text-davinci-003",
-                    prompt=text,
-                    temperature=0.7,
-                    max_tokens=150
-                )
-                reply_text = response.choices[0].text.strip()
-            else:
-                reply_text = get_reply()
-        except:
-            reply_text = get_reply()
+    # AI Reply
+    reply_text = get_reply(text)
+    update.message.reply_text(reply_text)
 
-        update.message.reply_text(reply_text)
-        memory.insert_one({
-            "text": text,
-            "reply": reply_text,
-            "count": 1
-        })
 
 # ---------- BROADCAST ----------
 def broadcast(update, context):
