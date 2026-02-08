@@ -28,14 +28,27 @@ def is_admin(update, context):
 
 # ---------- COMMANDS ----------
 def start(update, context):
-    update.message.reply_text(
-        "🤖 Tamil Group Moderation Bot\n\n"
-        "Admin Commands:\n"
-        "/warn (reply)\n"
-        "/mute (reply)\n"
-        "/unmute (reply)\n"
-        "/kick (reply)"
+    keyboard = [
+        [InlineKeyboardButton("💬 SUPPORT GROUP", url="https://t.me/MUSIC_BOT_WORLD")],
+        [InlineKeyboardButton("📢 SUPPORT CHANNEL", url="https://t.me/MUSIC_BOT_TEAM")],
+        [InlineKeyboardButton("👑 OWNER", url="https://t.me/DENKI1234")]
+    ]
+
+    reply_markup = InlineKeyboardMarkup(keyboard)
+
+    update.message.reply_photo(
+        photo="https://i.imgur.com/8KQZ5ZC.jpg",
+        caption=(
+            "🤖 *Tamil Group Moderation Bot*\n\n"
+            "• Auto moderation\n"
+            "• Warn / Mute system\n"
+            "• Learning auto reply\n\n"
+            "_Use in groups & make me admin_ 😎"
+        ),
+        parse_mode="Markdown",
+        reply_markup=reply_markup
     )
+
 
 def warn(update, context):
     if not is_admin(update, context):
