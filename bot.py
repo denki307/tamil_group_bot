@@ -14,7 +14,7 @@ from replies import get_reply, BAD_WORDS
 # ===== ENV =====
 TOKEN = os.getenv("BOT_TOKEN")
 MONGO_URL = os.getenv("MONGO_URL")
-OWNER_ID = int(os.getenv("OWNER_ID", "123456789"))  # 🔁 change
+OWNER_ID = int(os.getenv("OWNER_ID", "8516457288"))  # 🔁 change
 
 # ===== DB =====
 mongo = MongoClient(MONGO_URL)
@@ -56,11 +56,9 @@ def start(update, context):
     update.message.reply_photo(
         photo="https://graph.org/file/5edba62fe35cba67f3ad9-7ae56f4f2bd098647d.jpg",
         caption=(
-            "🤖 *Tamil Group Moderation Bot*\n\n"
-            "• Auto moderation\n"
-            "• Warn / Mute system\n"
-            "• Learning auto reply\n\n"
-            "_Use in groups & make me admin_ 😎"
+            "🤖 ᴀ ғᴀsᴛ & ᴘᴏᴡᴇʀғᴜʟ ᴛᴇʟᴇɢʀᴀᴍ ᴄʜᴀᴛ ʙᴏᴛ ᴡɪᴛʜ sᴏᴍᴇ ᴀᴡᴇsᴏᴍᴇ ғᴇᴀᴛᴜʀᴇs.
+──────────────────
+ ๏ ᴄʟɪᴄᴋ ᴏɴ ᴛʜᴇ ʜᴇʟᴩ ʙᴜᴛᴛᴏɴ ᴛᴏ ɢᴇᴛ ɪɴғᴏʀᴍᴀᴛɪᴏɴ ᴀʙᴏᴜᴛ ᴍʏ ᴍᴏᴅᴜʟᴇs ᴀɴᴅ ᴄᴏᴍᴍᴀɴᴅs."
         ),
         parse_mode=ParseMode.MARKDOWN,
         reply_markup=InlineKeyboardMarkup(keyboard)
