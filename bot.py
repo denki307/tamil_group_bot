@@ -1,4 +1,9 @@
 import os
+import openai
+
+OPENAI_API_KEY = os.getenv("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")
+openai.api_key = OPENAI_API_KEY
+
 import sys
 from datetime import datetime, timedelta
 from telegram.ext import (
