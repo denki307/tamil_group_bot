@@ -30,13 +30,12 @@ WARN_DATA = {}
 LAST_MESSAGES = {}
 
 # ---------- HELPERS ----------
-def back_keyboard():
-    return InlineKeyboardMarkup(
-        [[InlineKeyboardButton("⬅️ BACK", callback_data="help")]]
+def is_admin(update, context):
+    member = context.bot.get_chat_member(
+        update.effective_chat.id,
+        update.effective_user.id
     )
-
     return member.status in ["administrator", "creator"]
-
 def is_sudo(user_id):
     return (
         user_id == OWNER_ID
