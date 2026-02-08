@@ -1,10 +1,40 @@
-
 {
-  "name": "Tamil Learning Group Bot",
-  "description": "Tamil Auto Reply + Learning + Moderation Telegram Bot",
+  "name": "Tamil Group Moderation Bot",
+  "description": "Telegram Tamil Group",
+  "repository": "https://github.com/denki307/tamil_group_bot",
+  "keywords": [
+    "telegram",
+    "tamil",
+    "group",
+    "moderation",
+    "bot",
+    "mongodb",
+    "gban",
+    "sudo"
+  ],
   "env": {
-    "BOT_TOKEN": { "required": true },
-    "MONGO_URL": { "required": true }
+    "BOT_TOKEN": {
+      "description": "Telegram Bot Token (from @BotFather)",
+      "required": true
+    },
+    "MONGO_URL": {
+      "description": "MongoDB connection string (mongodb+srv://...)",
+      "required": true
+    },
+    "OWNER_ID": {
+      "description": "Telegram Owner User ID",
+      "required": true
+    }
   },
-  "formation": { "worker": { "quantity": 1 } }
+  "formation": {
+    "worker": {
+      "quantity": 1,
+      "size": "basic"
+    }
+  },
+  "buildpacks": [
+    {
+      "url": "heroku/python"
+    }
+  ]
 }
