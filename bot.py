@@ -81,7 +81,7 @@ def help_menu(update, context):
         [InlineKeyboardButton("🤧 GBAN", callback_data="gban")],
         [InlineKeyboardButton("📝 INFO", callback_data="info")],
         [InlineKeyboardButton("🥀 SUDO", callback_data="sudo")],
-    ])
+    ]
           
     query.edit_message_caption(
         caption="📖 *Help Menu*\n\nChoose a category:",
