@@ -1,0 +1,7 @@
+import os
+
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+photo_path = os.path.join(BASE_DIR, "https://graph.org/file/5edba62fe35cba67f3ad9-7ae56f4f2bd098647d.jpg)
+
+with open(photo_path, "rb") as photo:
+    await update.message.reply_photo(photo)
